@@ -104,20 +104,20 @@ Command `0x81` turns off the LEDs, stopping any flashing sequence.
 
 ## Cradle state
 
+Command `0x73` sets the cradle state, while command `0x71` requests the state from the cradle.
+
                 /  / State
     Tx: 01 73 06|31|03 46 00
     Rx: 01 05 07|03 00   # Ack
 
-                /  / State
     Tx: 01 71 05|03 76 00
+                /  / State
     Rx: 01 06 07|30|03 33
 
-State bits
+The state appears to be bitfield value.
 
-        /// 000
-           //// 1111
                / Fast charge
-    msb nnnnnnnn lsb
+    msb 0001111n lsb
 
 ## Cradle location
 
