@@ -2,6 +2,7 @@
 
 This document details the communication between the Zebra MC18 and PS20 scanners, and the charging cradle.
 
+
 ## Communication
 
 Communication with the cradle uses a bi-directional "3-wire" RS-232 interface using 9600 baud, 8N1.
@@ -37,6 +38,7 @@ Packets are short blocks of "binary" octets, with a command and variable length 
        |  |  |  |     |  /  / Checksum: XOR each byte
     Rx: 01|07|07|nn nn|03|9b
 
+
 ## Commands
 
 * `0x65`: [Release latch](#release)
@@ -59,6 +61,7 @@ Packets are short blocks of "binary" octets, with a command and variable length 
 * `0x7e`: [Read wall ID](#wall)
 * `0x81`: [Turn off LEDs](#turn-off)
 
+
 ## Latch
 
 The device is locked into the cradle on insertion, and the latch can be released for a short period of time.
@@ -79,6 +82,7 @@ The flash sequence can be customised with different on and off intervals, or a s
     Tx: 01 65 0b|1e|01 f4|01 f4|00|03 72 00         30s LED
     Tx: 01 65 0b|1e|01 f5|01 f4|01|03 72 00         30s LED smooth
     Rx: 01 05 07|03 00   # Ack
+
 
 ## LEDs
 
@@ -102,6 +106,7 @@ Command `0x81` turns off the LEDs, stopping any flashing sequence.
     Tx: 01 81 05|03 86 00
     Rx: 01 05 07|03 00   # Ack
 
+
 ## Cradle state
 
 Command `0x73` sets the cradle state, while command `0x71` requests the state from the cradle.
@@ -118,6 +123,7 @@ The state appears to be bitfield value.
 
                / Fast charge
     msb 0001111n lsb
+
 
 ## Cradle location
 
@@ -171,7 +177,6 @@ FIXME update
     
     0000001010011011
 
-
 ### Solenoid current
 
     Tx: 01 7c 05|03 7b 00
@@ -209,4 +214,3 @@ See Cradle State.
     Tx: 01 77 05|03 70 00
                  /   / version: 5.1
     Rx: 01 07 07|05 01|03 06
-
