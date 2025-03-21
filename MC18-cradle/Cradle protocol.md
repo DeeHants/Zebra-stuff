@@ -1,8 +1,20 @@
 # Symbol/Zebra MC18/PS20 cradle protocol
 
-## Packets
+This document details the communication between the Zebra MC18 and PS20 scanners, and the charging cradle.
 
-### Tx
+## Communication
+
+Communication with the cradle uses a bi-directional "3-wire" RS-232 interface using 9600 baud, 8N1.
+
+Pins left to right (looking at the scanner from the back):
+1. Ground
+2. Rx from cradle to scanner
+3. Tx from scanner to cradle
+4. +5V (input)
+
+Packets are short blocks of "binary" octets, with a command and variable length data.
+
+### Tx: scanner -> cradle
 
        /  / Literal: 1
        |  /  / Command
@@ -10,11 +22,12 @@
        |  |  |  /     / Data
        |  |  |  |     /  / Literal: 3
        |  |  |  |     |  /  / Checksum: XOR each byte
-       |--|--|--|-----|--|--/  / Literal: 0 (not in length)
+       |  |  |  |     |  |  /  / Literal: 0 (not in length)
     Tx: 01|65|07|nn nn|03|67|00
 
+> Note: There is a `0x00` octet on the end of the packet that is not included in the packet length.
 
-### Rx
+### Rx: cradle -> scanner
 
        /  / Literal: 1
        |  /  / Packet length
@@ -26,66 +39,70 @@
 
 ## Commands
 
-* `0x65`: Release
-* `0x66`: Read part number
-* `0x69`: Read serial number
-* `0x6b`: Read manufacture date
-* `0x6d`: Read hardware ID
-* `0x6f`: Read row
-* `0x70`: Read col
-* `0x71`: Read state
-* `0x72`: Firmware update?
-* `0x73`: Set state
-* `0x74`: Set row
-* `0x75`: Set col
-* `0x76`: Blink
-* `0x77`: Read firmware version
-* `0x7a`: Get voltage 1
-* `0x7b`: Get voltage 2
-* `0x7c`: Get current
-* `0x7d`: Set wall
-* `0x7e`: Read wall
-* `0x81`: Turn off
+* `0x65`: [Release latch](#release)
+* `0x66`: [Read part number](#part-number)
+* `0x69`: [Read serial number](#serial-number)
+* `0x6b`: [Read manufacture date](#manufacture-date)
+* `0x6d`: [Read hardware ID](#hardware-id)
+* `0x6f`: [Read wall row](#row)
+* `0x70`: [Read wall column](#column)
+* `0x71`: [Read state](#cradle-state)
+* `0x73`: [Set state](#cradle-state)
+* `0x74`: [Set wall row](#row)
+* `0x75`: [Set wall column](#column)
+* `0x76`: [Flash LEDs](#flash)
+* `0x77`: [Read firmware version](#firmware-version)
+* `0x7a`: [Get voltage 1](#voltage)
+* `0x7b`: [Get voltage 2](#voltage)
+* `0x7c`: [Get solenoid current](#solenoid-current)
+* `0x7d`: [Set wall ID](#wall)
+* `0x7e`: [Read wall ID](#wall)
+* `0x81`: [Turn off LEDs](#turn-off)
 
 ## Latch
 
-## Release
+The device is locked into the cradle on insertion, and the latch can be released for a short period of time.
 
-                /  / Interval
-                |  /     / LED on time
-                |  |     /     / LED off time
-                |  |     |     /  / Smooth
-                |--|-----|-----|--|
-    Tx: 01 65 0b|0b|01 f4|01 f4|00|03 67 00         11s LED
+> Note: The cradle hardware does not support, or allow the latch to be released permanently.
+
+### Release
+
+Command `0x65` releases the latch for between 10 and 30 seconds. Optionally, flashing the LEDs for the period of the release.
+The flash sequence can be customised with different on and off intervals, or a smooth fade.
+
+                /  / Interval in seconds
+                |  /     / LED on time in milliseconds
+                |  |     /     / LED off time in milliseconds
+                |  |     |     /  / Smooth fade
     Tx: 01 65 0b|0a|01 f4|01 f4|00|03 66 00         10s LED
     Tx: 01 65 0b|0a|00 00|00 00|00|03 66 00         10s no LED
     Tx: 01 65 0b|1e|01 f4|01 f4|00|03 72 00         30s LED
     Tx: 01 65 0b|1e|01 f5|01 f4|01|03 72 00         30s LED smooth
     Rx: 01 05 07|03 00   # Ack
 
-
 ## LEDs
 
-### Blink
+### Flash
 
-                /     / LED on time
-                |     /     / LED off time
-                |     |     /     / Count
-                |     |     |     /  / Smooth
-                |-----|-----|-----|--|
-    Tx: 01 76 0c|01 f4|01 f4|00 05|00|03 7d 00    # 500 500 x 5
-    Tx: 01 76 0c|01 f4|01 f4|00 63|00|03 1b 00    # 500 500 x 99
+Command `0x76` flashes the LEDs a fixed number of times, with a customised on and off intervals, or a smooth fade.
+
+                /     / LED on time in milliseconds
+                |     /     / LED off time in milliseconds
+                |     |     /     / Number of cycles
+                |     |     |     /  / Smooth fade
+    Tx: 01 76 0c|01 f4|01 f4|00 05|00|03 7d 00    # 5 x 500ms, 500ms
+    Tx: 01 76 0c|01 f4|01 f4|00 63|00|03 1b 00    # 99 x 500ms, 500ms
     Tx: 01 76 0c|00 c8|00 c8|00 02|00|03 7a 00    # 2 x 200ms, 200ms
     Rx: 01 05 07|03 00   # Ack
 
-## Turn off
+### Turn off
+
+Command `0x81` turns off the LEDs, stopping any flashing sequence.
 
     Tx: 01 81 05|03 86 00
     Rx: 01 05 07|03 00   # Ack
 
-
 ## Cradle state
-
 
                 /  / State
     Tx: 01 73 06|31|03 46 00
