@@ -127,34 +127,42 @@ The state appears to be bitfield value.
 
 ## Cradle location
 
+The cradle can be programmed with its row and column position, and a wall ID, allowing the scanner to know where it's plugged in.
+
 ### Row
 
-    Tx: 01 6f 05|03 68 00      # read row
+Command `0x6f` requests the row number from the cradle, while command `0x74` sets the row number.
+
+    Tx: 01 6f 05|03 68 00
                  /   / Row 65535
-    Rx: 01 07 07|ff ff|03 02  # row response
+    Rx: 01 07 07|ff ff|03 02
 
                  /   / Row 65535
-    Tx: 01 74 07|ff ff|03 71 00 # Set row
+    Tx: 01 74 07|ff ff|03 71 00
     Rx: 01 05 07|03 00   # Ack
 
 ### Column
 
-    Tx: 01 70 05|03 77 00       # read col
-                 /   / Row 65534
-    Rx: 01 07 07|ff fe|03 03    # col response
+Command `0x70` requests the column number from the cradle, while command `0x75` sets the column number.
 
-                 /   / Row 65534
-    Tx: 01 75 07|ff fe|03 71 00 # Set Col
+    Tx: 01 70 05|03 77 00
+                 /   / Column 65534
+    Rx: 01 07 07|ff fe|03 03
+
+                 /   / Column 65534
+    Tx: 01 75 07|ff fe|03 71 00
     Rx: 01 05 07|03 00   # Ack
 
 ### Wall
 
-    Tx: 01 7e 05|03 79 00       # read wall
+Command `0x7e` requests the wall ID from the cradle, while command `0x7d` sets the wall ID.
+
+    Tx: 01 7e 05|03 79 00
                  /   / Wall 65533
-    Rx: 01 07 07|ff fd|03 00    # col response
+    Rx: 01 07 07|ff fd|03 00
 
                  /   / Wall 65533
-    Tx: 01 7d 07|ff fd|03 7a 00 # Set wall
+    Tx: 01 7d 07|ff fd|03 7a 00
     Rx: 01 05 07|03 00   # Ack
 
 
